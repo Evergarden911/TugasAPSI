@@ -9,7 +9,7 @@ admin_bp = Blueprint('admin', __name__)
 @login_required
 @role_required('admin')
 def index_admin():
-    return render_template('frontend/templates/admin.html')
+    return render_template('admin.html')
 
 @admin_bp.route('/api/admin/import-karyawan', methods=['POST'])
 @login_required

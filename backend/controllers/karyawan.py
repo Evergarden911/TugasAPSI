@@ -10,7 +10,7 @@ karyawan_bp = Blueprint('karyawan', __name__)
 @role_required('hrd', 'manajer') # Lapis keamanan RBAC
 def index_karyawan():
     """Merender cetakan HTML dasar untuk halaman karyawan."""
-    return render_template('frontend/templates/karyawan.html')
+    return render_template('karyawan.html')
 
 @karyawan_bp.route('/api/karyawan', methods=['GET', 'POST'])
 @login_required

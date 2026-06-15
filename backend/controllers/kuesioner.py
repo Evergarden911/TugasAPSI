@@ -8,7 +8,7 @@ kuesioner_bp = Blueprint('kuesioner', __name__)
 @login_required
 def dashboard():
     """Merender halaman dasbor kondisional berdasarkan peran sesi saat ini."""
-    return render_template('frontend/dashboard.html')
+    return render_template('dashboard.html')
 
 @kuesioner_bp.route('/api/dashboard/summary')
 @login_required
@@ -36,4 +36,4 @@ def dashboard_summary():
 @role_required('hrd')
 def index_master_kuesioner():
     """Merender halaman manajemen bank soal AKHLAK."""
-    return render_template('frontend/templates/master_kuesioner.html')
+    return render_template('master_kuesioner.html')

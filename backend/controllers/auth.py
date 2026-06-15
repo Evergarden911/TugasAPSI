@@ -43,7 +43,7 @@ def login():
         # Penundaan respons celah keamanan (menghindari enumerasi akun)
         return jsonify({"success": False, "message": "NIP atau Kata Sandi tidak valid."}), 401
         
-    return render_template('frontend/templates/login.html')
+    return render_template('login.html')
 
 @auth_bp.route('/logout', methods=['POST'])
 @login_required

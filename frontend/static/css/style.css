@@ -1,0 +1,581 @@
+/* ==========================================================================
+   Sistem Penilaian 360 Derajat - Master Stylesheet
+   ========================================================================== */
+
+/* 1. Variabel Global & Tema Dasar */
+:root {
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --bg-sidebar: #0b0f19;
+    --bg-input: #0f172a;
+    --color-text-main: #f8fafc;
+    --color-text-muted: #94a3b8;
+    --accent-lime: #deff9a;
+    --accent-teal: #11caa0;
+    --color-error: #f43f5e;
+    --border-color: rgba(255, 255, 255, 0.05);
+    --sidebar-width: 260px;
+    --font-primary: 'Inter', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--bg-main);
+    color: var(--color-text-main);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* 2. Tipografi & Utilitas */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    color: var(--color-text-main);
+}
+
+.text-muted { color: var(--color-text-muted); }
+.text-lime { color: var(--accent-lime); }
+.text-teal { color: var(--accent-teal); }
+
+/* 3. Kerangka Tata Letak Utama (Layouting) */
+aside {
+    width: var(--sidebar-width);
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+}
+
+.sidebar-brand {
+    padding: 24px;
+    font-size: 20px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-brand span { color: var(--accent-lime); }
+
+.sidebar-menu {
+    list-style: none;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-grow: 1;
+}
+
+.sidebar-item a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.sidebar-item a:hover, .sidebar-item.active a {
+    color: var(--color-text-main);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-item.active a i { color: var(--accent-lime); }
+
+.main-wrapper {
+    margin-left: var(--sidebar-width);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+nav {
+    height: 70px;
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 40px;
+    position: sticky;
+    top: 0;
+    z-index: 9;
+}
+
+.content-container {
+    padding: 40px;
+    flex-grow: 1;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-info {
+    text-align: right;
+}
+
+.user-name {
+    font-size: 14px;
+    font-weight: 600;
+    display: block;
+}
+
+.user-role {
+    font-size: 12px;
+    background-color: rgba(222, 255, 154, 0.1);
+    color: var(--accent-lime);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-top: 2px;
+    display: inline-block;
+}
+
+.btn-logout {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-text-muted);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 20px;
+    transition: all 0.2s;
+}
+
+.btn-logout:hover {
+    color: var(--color-error);
+    border-color: var(--color-error);
+    background-color: rgba(244, 63, 94, 0.05);
+}
+
+/* 4. Komponen Modul (Cards & Panels) */
+.card, .panel-box, .metric-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+/* 5. Komponen Formulir & Input */
+.form-group { margin-bottom: 16px; }
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.form-control {
+    width: 100%;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-color);
+    color: var(--color-text-main);
+    padding: 12px;
+    border-radius: 8px;
+    font-family: var(--font-primary);
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-lime);
+}
+
+/* 6. Komponen Tombol (Buttons) */
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-lime) 0%, var(--accent-teal) 100%);
+    color: #050505;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--color-text-main);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover { background-color: rgba(255, 255, 255, 0.05); }
+
+.btn-icon {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--color-text-main);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-icon.edit:hover { background-color: rgba(222, 255, 154, 0.1); color: var(--accent-lime); border-color: var(--accent-lime); }
+.btn-icon.delete:hover { background-color: rgba(244, 63, 94, 0.1); color: var(--color-error); border-color: var(--color-error); }
+
+/* 7. Komponen Tabel Data */
+.table-container {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th {
+    background-color: rgba(255, 255, 255, 0.02);
+    padding: 16px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--border-color);
+}
+
+td {
+    padding: 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+tr:last-child td { border-bottom: none; }
+
+/* 8. Lencana & Status (Badges) */
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-pending { background-color: rgba(234, 179, 8, 0.1); color: #eab308; }
+.status-success { background-color: rgba(34, 197, 94, 0.1); color: #22c55e; }
+
+.pillar-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background-color: rgba(222, 255, 154, 0.1);
+    color: var(--accent-lime);
+}
+
+/* 9. Modal Overlay (Dialog Interaktif) */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-content {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content { transform: translateY(0); }
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-body { padding: 24px; }
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-close {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* 10. Indikator Pemuatan (Loaders) */
+#loadingIndicator {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-text-muted);
+}
+
+/* 11. Halaman Login */
+body.login-page {
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.bg-glow {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(222, 255, 154, 0.05) 0%, transparent 70%);
+    top: -10%;
+    right: -10%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 440px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    position: relative;
+    z-index: 1;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.login-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    margin-bottom: 8px;
+}
+
+.login-header h1 span {
+    color: var(--accent-lime);
+}
+
+.login-header p {
+    color: var(--color-text-muted);
+    font-size: 14px;
+}
+
+.error-banner {
+    background-color: rgba(244, 63, 94, 0.1);
+    border-left: 4px solid var(--color-error);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    animation: fadeIn 0.3s ease;
+}
+
+.error-banner span {
+    font-size: 14px;
+    color: var(--color-error);
+    font-weight: 500;
+}
+
+.login-page .form-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.login-page .form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-main);
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-wrapper i.input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    font-size: 16px;
+    pointer-events: none;
+    transition: color 0.2s;
+}
+
+.login-page .form-control {
+    background-color: var(--bg-input);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 14px 16px 14px 48px;
+    font-size: 15px;
+}
+
+.login-page .form-control:focus {
+    box-shadow: 0 0 0 3px rgba(222, 255, 154, 0.1);
+}
+
+.login-page .form-control:focus + i.input-icon {
+    color: var(--accent-lime);
+}
+
+.toggle-password {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 4px;
+}
+
+.toggle-password:hover {
+    color: var(--color-text-main);
+}
+
+.form-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    font-size: 14px;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: var(--color-text-muted);
+}
+
+.remember-me input {
+    accent-color: var(--accent-lime);
+    width: 16px;
+    height: 16px;
+}
+
+.btn-submit {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent-lime) 0%, var(--accent-teal) 100%);
+    color: #050505;
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    font-family: var(--font-primary);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-submit:hover { opacity: 0.95; }
+.btn-submit:active { transform: scale(0.98); }
+
+.btn-submit:disabled {
+    background: var(--bg-main);
+    color: var(--color-text-muted);
+    border: 1px solid var(--border-color);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-top: 2px solid #000;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+}
+
+.btn-submit:disabled .spinner {
+    display: block;
+    border-color: rgba(255, 255, 255, 0.1);
+    border-top: 2px solid var(--color-text-muted);
+}
+
+.footer-note {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

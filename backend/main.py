@@ -1,10 +1,18 @@
+import os
+
 from flask import Flask
 from app.config import Config
 from app.extensions import db, migrate, login_manager
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 def create_app(config_class=Config):
     """Fungsi pabrik untuk merakit dan mengonfigurasi aplikasi Flask."""
-    app = Flask(__name__, template_folder='../templates', static_folder='../static')
+    app = Flask(
+        __name__,
+        template_folder=os.path.join(BASE_DIR, 'frontend', 'templates'),
+        static_folder=os.path.join(BASE_DIR, 'frontend', 'static'),
+    )
     app.config.from_object(config_class)
 
     # Mengikat dan menginisialisasi ekstensi dengan objek aplikasi yang baru dibuat
