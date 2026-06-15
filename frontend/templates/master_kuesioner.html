@@ -1,0 +1,410 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Manajemen Kuesioner AKHLAK - Sistem 360°{% endblock %}
+
+{% block head %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--accent-lime) 0%, var(--accent-teal) 100%);
+        color: #050505;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover { opacity: 0.9; }
+
+    .table-container {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    th {
+        background-color: rgba(255, 255, 255, 0.02);
+        padding: 16px;
+        font-size: 13px;
+        color: var(--color-text-muted);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+        padding: 16px;
+        font-size: 14px;
+        border-bottom: 1px solid var(--border-color);
+        line-height: 1.5;
+    }
+
+    .pillar-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: rgba(222, 255, 154, 0.1);
+        color: var(--accent-lime);
+    }
+
+    .action-group {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-icon {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--color-text-main);
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .btn-icon.edit:hover { background-color: rgba(222, 255, 154, 0.1); color: var(--accent-lime); border-color: var(--accent-lime); }
+    .btn-icon.delete:hover { background-color: rgba(244, 63, 94, 0.1); color: #f43f5e; border-color: #f43f5e; }
+
+    /* Desain Modal Form */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-content {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        width: 100%;
+        max-width: 600px;
+        transform: translateY(-20px);
+        transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content {
+        transform: translateY(0);
+    }
+
+    .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h2 { font-size: 18px; font-weight: 600; }
+
+    .btn-close {
+        background: transparent;
+        border: none;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+    .modal-body { padding: 24px; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--color-text-muted); }
+    
+    .form-control {
+        width: 100%;
+        background-color: var(--bg-main);
+        border: 1px solid var(--border-color);
+        color: var(--color-text-main);
+        padding: 12px;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 14px;
+    }
+    
+    .form-control:focus { outline: none; border-color: var(--accent-lime); }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--color-text-main);
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    #loadingIndicator { text-align: center; padding: 40px; color: var(--color-text-muted); }
+    
+    .filter-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 style="font-size: 24px; font-weight: 700;">Manajemen Bank Soal AKHLAK</h1>
+        <p style="color: var(--color-text-muted); font-size: 14px; margin-top: 4px;">Kelola indikator perilaku yang akan dirender secara dinamis pada formulir evaluasi karyawan.</p>
+    </div>
+    <button class="btn-primary" onclick="openModal('add')">
+        <i class="fa-solid fa-plus"></i> Tambah Indikator
+    </button>
+</div>
+
+<div class="filter-bar">
+    <select id="filterPilar" class="form-control" style="max-width: 200px; padding: 8px 12px;" onchange="renderTable()">
+        <option value="all">Semua Pilar</option>
+        <option value="Amanah">Amanah</option>
+        <option value="Kompeten">Kompeten</option>
+        <option value="Harmonis">Harmonis</option>
+        <option value="Loyal">Loyal</option>
+        <option value="Adaptif">Adaptif</option>
+        <option value="Kolaboratif">Kolaboratif</option>
+    </select>
+</div>
+
+<div class="table-container">
+    <table id="questionTable">
+        <thead>
+            <tr>
+                <th style="width: 50px;">ID</th>
+                <th style="width: 150px;">Pilar Tata Nilai</th>
+                <th>Deskripsi Indikator Perilaku</th>
+                <th style="width: 100px; text-align: center;">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="questionTableBody">
+            </tbody>
+    </table>
+    <div id="loadingIndicator">Mengambil instrumen pertanyaan dari peladen...</div>
+</div>
+
+<div class="modal-overlay" id="questionModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Tambah Indikator Perilaku Baru</h2>
+            <button class="btn-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="questionForm">
+            <div class="modal-body">
+                <input type="hidden" id="formMode" value="add">
+                <input type="hidden" id="questionId" value="">
+                
+                <div class="form-group">
+                    <label for="pilarAkhlak">Kategori Pilar AKHLAK</label>
+                    <select id="pilarAkhlak" class="form-control" required>
+                        <option value="">-- Pilih Nilai Inti --</option>
+                        <option value="Amanah">Amanah - Memegang teguh kepercayaan</option>
+                        <option value="Kompeten">Kompeten - Terus belajar dan mengembangkan kapabilitas</option>
+                        <option value="Harmonis">Harmonis - Saling peduli dan menghargai perbedaan</option>
+                        <option value="Loyal">Loyal - Berdedikasi mengutamakan kepentingan bangsa</option>
+                        <option value="Adaptif">Adaptif - Terus berinovasi menggerakkan perubahan</option>
+                        <option value="Kolaboratif">Kolaboratif - Membangun kerja sama sinergis</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="teksIndikator">Teks Indikator Perilaku yang Dinilai</label>
+                    <textarea id="teksIndikator" class="form-control" placeholder="Contoh: Selalu memenuhi janji dan komitmen dalam menyelesaikan tugas sesuai tenggat waktu." required></textarea>
+                </div>
+                
+                <div style="background-color: rgba(222, 255, 154, 0.05); padding: 12px; border-radius: 8px; border-left: 3px solid var(--accent-lime);">
+                    <p style="font-size: 12px; color: var(--color-text-muted); line-height: 1.5;">
+                        <strong>Catatan Integritas:</strong> Perubahan teks pada indikator akan langsung berlaku pada seluruh kuesioner karyawan yang belum diserahkan. Pastikan redaksi kalimat bersifat netral dan objektif.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Batal</button>
+                <button type="submit" class="btn-primary" id="btnSave">Simpan Indikator</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let questionsData = [];
+    const modal = document.getElementById('questionModal');
+    const form = document.getElementById('questionForm');
+
+    const fetchQuestions = async () => {
+        document.getElementById('loadingIndicator').style.display = 'block';
+        document.getElementById('questionTableBody').innerHTML = '';
+        
+        try {
+            const response = await fetch('/api/master-kuesioner');
+            if (!response.ok) throw new Error('Gagal menarik instrumen soal');
+            
+            questionsData = await response.json();
+            renderTable();
+        } catch (error) {
+            alert('Kesalahan komunikasi peladen: ' + error.message);
+        } finally {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+    };
+
+    const renderTable = () => {
+        const tbody = document.getElementById('questionTableBody');
+        const filterValue = document.getElementById('filterPilar').value;
+        
+        // Menerapkan logika filtrasi sisi klien untuk performa
+        const filteredData = filterValue === 'all' 
+            ? questionsData 
+            : questionsData.filter(q => q.pilar === filterValue);
+
+        if (filteredData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">Tidak ada indikator soal yang ditemukan.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = filteredData.map(q => `
+            <tr>
+                <td style="font-family: monospace; color: var(--color-text-muted);">#${q.id}</td>
+                <td><span class="pillar-badge">${q.pilar}</span></td>
+                <td>${q.teks_indikator}</td>
+                <td>
+                    <div class="action-group">
+                        <button class="btn-icon edit" onclick="openModal('edit', ${q.id})" title="Perbaiki Redaksi">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button class="btn-icon delete" onclick="deleteQuestion(${q.id})" title="Hapus Indikator">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    };
+
+    const openModal = (mode, id = null) => {
+        document.getElementById('formMode').value = mode;
+        form.reset();
+
+        if (mode === 'edit') {
+            document.getElementById('modalTitle').textContent = 'Ubah Redaksi Indikator';
+            const question = questionsData.find(q => q.id === id);
+            if (question) {
+                document.getElementById('questionId').value = question.id;
+                document.getElementById('pilarAkhlak').value = question.pilar;
+                document.getElementById('teksIndikator').value = question.teks_indikator;
+            }
+        } else {
+            document.getElementById('modalTitle').textContent = 'Tambah Indikator Perilaku Baru';
+            document.getElementById('questionId').value = '';
+        }
+
+        modal.classList.add('active');
+    };
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+    };
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btnSave = document.getElementById('btnSave');
+        btnSave.disabled = true;
+        btnSave.textContent = 'Menyimpan...';
+
+        const mode = document.getElementById('formMode').value;
+        const qId = document.getElementById('questionId').value;
+        
+        const payload = {
+            pilar: document.getElementById('pilarAkhlak').value,
+            teks_indikator: document.getElementById('teksIndikator').value.trim()
+        };
+
+        try {
+            const endpoint = mode === 'add' ? '/api/master-kuesioner' : `/api/master-kuesioner/${qId}`;
+            const method = mode === 'add' ? 'POST' : 'PUT';
+
+            const response = await fetch(endpoint, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                closeModal();
+                fetchQuestions(); 
+            } else {
+                const result = await response.json();
+                alert(result.message || 'Gagal merekam instrumen.');
+            }
+        } catch (error) {
+            alert('Kesalahan jaringan. Peladen tidak merespons.');
+        } finally {
+            btnSave.disabled = false;
+            btnSave.textContent = 'Simpan Indikator';
+        }
+    });
+
+    const deleteQuestion = async (id) => {
+        if (!confirm('Peringatan: Menghapus indikator ini dapat memengaruhi integritas data evaluasi historis. Apakah kamu yakin?')) return;
+
+        try {
+            const response = await fetch(`/api/master-kuesioner/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                fetchQuestions();
+            } else {
+                alert('Gagal menghapus. Indikator mungkin sedang digunakan dalam periode aktif.');
+            }
+        } catch (error) {
+            alert('Kesalahan jaringan.');
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', fetchQuestions);
+</script>
+{% endblock %}

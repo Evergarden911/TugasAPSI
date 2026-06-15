@@ -1,0 +1,364 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Pemetaan Relasi 360° - Sistem Penilaian{% endblock %}
+
+{% block head %}
+<style>
+    .page-header {
+        margin-bottom: 24px;
+    }
+
+    .card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    /* Tabel Status Pemetaan */
+    .table-container {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    th {
+        background-color: rgba(255, 255, 255, 0.02);
+        padding: 16px;
+        font-size: 13px;
+        color: var(--color-text-muted);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+        padding: 16px;
+        font-size: 14px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .badge-status {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-complete { background-color: rgba(17, 202, 160, 0.1); color: var(--accent-teal); }
+    .status-incomplete { background-color: rgba(244, 63, 94, 0.1); color: #f43f5e; }
+
+    .btn-action {
+        background-color: transparent;
+        border: 1px solid var(--accent-lime);
+        color: var(--accent-lime);
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+        background-color: var(--accent-lime);
+        color: #000;
+    }
+
+    /* Antarmuka Panel Pemetaan Interaktif */
+    #mappingPanel {
+        display: none;
+        border-top: 2px dashed var(--border-color);
+        padding-top: 24px;
+        margin-top: 24px;
+    }
+
+    .mapping-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 16px;
+    }
+
+    .role-section {
+        background-color: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+    }
+
+    .role-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .evaluator-list {
+        list-style: none;
+        min-height: 50px;
+    }
+
+    .evaluator-item {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+    }
+
+    .btn-remove {
+        color: #f43f5e;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+    }
+
+    .select-evaluator {
+        width: 100%;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--color-text-main);
+        padding: 8px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+    }
+    
+    .btn-save-mapping {
+        width: 100%;
+        background: linear-gradient(135deg, var(--accent-lime) 0%, var(--accent-teal) 100%);
+        color: #050505;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 24px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 style="font-size: 24px; font-weight: 700;">Pemetaan Relasi Evaluasi</h1>
+    <p style="color: var(--color-text-muted); font-size: 14px; margin-top: 4px;">Tentukan Atasan, Rekan Sejawat, dan Bawahan untuk setiap karyawan guna mengaktifkan distribusi kuesioner.</p>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>NIP Target</th>
+                    <th>Nama Karyawan</th>
+                    <th>Divisi</th>
+                    <th>Status Pemetaan</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="targetTableBody">
+                </tbody>
+        </table>
+    </div>
+
+    <div id="mappingPanel">
+        <h2 style="font-size: 18px;">Konfigurasi Evaluator untuk: <span id="targetNameDisplay" style="color: var(--accent-lime);"></span></h2>
+        <input type="hidden" id="currentTargetNip">
+
+        <div class="mapping-grid">
+            <div class="role-section">
+                <div class="role-header">
+                    <h3 style="font-size: 14px;">Atasan Langsung (40%)</h3>
+                </div>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <select id="selectAtasan" class="select-evaluator">
+                        <option value="">-- Pilih Atasan --</option>
+                    </select>
+                    <button class="btn-action" onclick="addEvaluator('atasan')">Tambah</button>
+                </div>
+                <ul class="evaluator-list" id="listAtasan"></ul>
+            </div>
+
+            <div class="role-section">
+                <div class="role-header">
+                    <h3 style="font-size: 14px;">Rekan Sejawat (20%)</h3>
+                </div>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <select id="selectSejawat" class="select-evaluator">
+                        <option value="">-- Pilih Rekan --</option>
+                    </select>
+                    <button class="btn-action" onclick="addEvaluator('sejawat')">Tambah</button>
+                </div>
+                <ul class="evaluator-list" id="listSejawat"></ul>
+            </div>
+
+            <div class="role-section">
+                <div class="role-header">
+                    <h3 style="font-size: 14px;">Bawahan (30%)</h3>
+                </div>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <select id="selectBawahan" class="select-evaluator">
+                        <option value="">-- Pilih Bawahan --</option>
+                    </select>
+                    <button class="btn-action" onclick="addEvaluator('bawahan')">Tambah</button>
+                </div>
+                <ul class="evaluator-list" id="listBawahan"></ul>
+            </div>
+        </div>
+        
+        <button class="btn-save-mapping" onclick="saveMappingConfig()">Simpan Konfigurasi Pemetaan</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let employeesList = [];
+    let currentMapping = {
+        atasan: [],
+        sejawat: [],
+        bawahan: []
+    };
+
+    const fetchMappingStatus = async () => {
+        try {
+            const response = await fetch('/api/pemetaan/status');
+            const data = await response.json();
+            employeesList = data.karyawan; // Cache daftar untuk dropdown
+            renderTargetTable(data.status_pemetaan);
+        } catch (error) {
+            console.error('Gagal menarik data status pemetaan:', error);
+        }
+    };
+
+    const renderTargetTable = (statusData) => {
+        const tbody = document.getElementById('targetTableBody');
+        tbody.innerHTML = statusData.map(item => `
+            <tr>
+                <td style="font-family: monospace;">${item.nip}</td>
+                <td style="font-weight: 500;">${item.nama}</td>
+                <td>${item.divisi}</td>
+                <td>
+                    <span class="badge-status ${item.is_complete ? 'status-complete' : 'status-incomplete'}">
+                        ${item.is_complete ? 'Lengkap' : 'Belum Lengkap'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn-action" onclick="openMappingPanel('${item.nip}', '${item.nama}')">Kelola Relasi</button>
+                </td>
+            </tr>
+        `).join('');
+    };
+
+    const openMappingPanel = async (nipTarget, namaTarget) => {
+        document.getElementById('currentTargetNip').value = nipTarget;
+        document.getElementById('targetNameDisplay').textContent = namaTarget;
+        document.getElementById('mappingPanel').style.display = 'block';
+        
+        currentMapping = { atasan: [], sejawat: [], bawahan: [] };
+        
+        populateDropdowns(nipTarget);
+
+        // Ambil konfigurasi eksisting dari backend jika ada
+        try {
+            const response = await fetch(`/api/pemetaan/${nipTarget}`);
+            if(response.ok) {
+                const configData = await response.json();
+                if(configData.mapping) {
+                    currentMapping = configData.mapping;
+                }
+            }
+        } catch (error) {
+            console.error('Gagal mengambil detail relasi eksisting.');
+        }
+
+        renderEvaluatorLists();
+    };
+
+    const populateDropdowns = (nipTarget) => {
+        const options = `<option value="">-- Pilih Evaluator --</option>` + 
+            employeesList
+                .filter(emp => emp.nip !== nipTarget) // Validasi logika: Mencegah self-evaluation di role lain
+                .map(emp => `<option value="${emp.nip}">${emp.nama} (${emp.jabatan})</option>`)
+                .join('');
+        
+        document.getElementById('selectAtasan').innerHTML = options;
+        document.getElementById('selectSejawat').innerHTML = options;
+        document.getElementById('selectBawahan').innerHTML = options;
+    };
+
+    const addEvaluator = (role) => {
+        const selectElem = document.getElementById(`select${role.charAt(0).toUpperCase() + role.slice(1)}`);
+        const nipEvaluator = selectElem.value;
+        
+        if (!nipEvaluator) return;
+
+        // Validasi logika: Cegah duplikasi penilai pada role yang sama
+        if (currentMapping[role].some(e => e.nip === nipEvaluator)) {
+            alert('Karyawan tersebut sudah ditambahkan pada kelompok ini.');
+            return;
+        }
+
+        const employee = employeesList.find(e => e.nip === nipEvaluator);
+        currentMapping[role].push({ nip: employee.nip, nama: employee.nama });
+        
+        selectElem.value = ""; // Reset dropdown
+        renderEvaluatorLists();
+    };
+
+    const removeEvaluator = (role, nipEvaluator) => {
+        currentMapping[role] = currentMapping[role].filter(e => e.nip !== nipEvaluator);
+        renderEvaluatorLists();
+    };
+
+    const renderEvaluatorLists = () => {
+        ['atasan', 'sejawat', 'bawahan'].forEach(role => {
+            const ul = document.getElementById(`list${role.charAt(0).toUpperCase() + role.slice(1)}`);
+            ul.innerHTML = currentMapping[role].map(e => `
+                <li class="evaluator-item">
+                    <span>${e.nama}</span>
+                    <button class="btn-remove" onclick="removeEvaluator('${role}', '${e.nip}')"><i class="fa-solid fa-xmark"></i></button>
+                </li>
+            `).join('');
+        });
+    };
+
+    const saveMappingConfig = async () => {
+        const btn = document.querySelector('.btn-save-mapping');
+        const nipTarget = document.getElementById('currentTargetNip').value;
+        
+        btn.disabled = true;
+        btn.textContent = 'Menyimpan...';
+
+        try {
+            const response = await fetch(`/api/pemetaan/${nipTarget}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(currentMapping)
+            });
+
+            if (response.ok) {
+                alert('Konfigurasi relasi berhasil disimpan.');
+                fetchMappingStatus(); // Segarkan tabel utama
+            } else {
+                alert('Gagal menyimpan konfigurasi.');
+            }
+        } catch (error) {
+            alert('Terjadi kesalahan jaringan.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Simpan Konfigurasi Pemetaan';
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', fetchMappingStatus);
+</script>
+{% endblock %}

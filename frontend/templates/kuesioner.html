@@ -1,0 +1,418 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Lembar Evaluasi AKHLAK - Sistem 360°{% endblock %}
+
+{% block head %}
+<style>
+    /* Header Kuesioner */
+    .eval-header {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 70px;
+        z-index: 8;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
+
+    .target-info h1 {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .target-info p {
+        color: var(--color-text-muted);
+        font-size: 14px;
+    }
+
+    .progress-wrapper {
+        text-align: right;
+        min-width: 200px;
+    }
+
+    .progress-text {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--accent-lime);
+    }
+
+    .progress-bar-bg {
+        background-color: var(--bg-main);
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        background: linear-gradient(90deg, var(--accent-lime), var(--accent-teal));
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    /* Kategori Nilai AKHLAK */
+    .value-section {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 32px;
+        overflow: hidden;
+    }
+
+    .value-header {
+        background-color: rgba(255, 255, 255, 0.02);
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .value-icon {
+        width: 40px;
+        height: 40px;
+        background-color: rgba(222, 255, 154, 0.1);
+        color: var(--accent-lime);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .value-title h2 { font-size: 18px; font-weight: 700; }
+    .value-title p { font-size: 13px; color: var(--color-text-muted); margin-top: 4px; }
+
+    /* Daftar Pertanyaan */
+    .question-list {
+        padding: 0;
+        margin: 0;
+        list-style: none;
+    }
+
+    .question-item {
+        padding: 24px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .question-item:last-child {
+        border-bottom: none;
+    }
+
+    .question-text {
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 16px;
+        font-weight: 500;
+    }
+
+    /* Skala Likert Interaktif */
+    .likert-scale {
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        max-width: 600px;
+    }
+
+    .likert-option {
+        flex: 1;
+        position: relative;
+    }
+
+    .likert-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    .likert-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+        height: 100%;
+    }
+
+    .likert-label .score {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .likert-label .desc {
+        font-size: 11px;
+        color: var(--color-text-muted);
+    }
+
+    .likert-option input[type="radio"]:checked ~ .likert-label {
+        background-color: rgba(222, 255, 154, 0.1);
+        border-color: var(--accent-lime);
+    }
+
+    .likert-option input[type="radio"]:checked ~ .likert-label .score {
+        color: var(--accent-lime);
+    }
+
+    .likert-option input[type="radio"]:checked ~ .likert-label .desc {
+        color: var(--color-text-main);
+    }
+
+    .likert-label:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Navigasi Form */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, var(--accent-lime) 0%, var(--accent-teal) 100%);
+        color: #050505;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+    .btn-submit:disabled {
+        background: var(--bg-card);
+        color: var(--color-text-muted);
+        border: 1px solid var(--border-color);
+        cursor: not-allowed;
+    }
+
+    #loadingOverlay {
+        text-align: center;
+        padding: 60px;
+        color: var(--color-text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<input type="hidden" id="taskId" value="{{ task_id }}">
+
+<div id="loadingOverlay">
+    <i class="fa-solid fa-circle-notch fa-spin fa-2x" style="margin-bottom: 16px; color: var(--accent-lime);"></i>
+    <p>Mempersiapkan instrumen evaluasi...</p>
+</div>
+
+<div id="kuesionerWrapper" style="display: none;">
+    <div class="eval-header">
+        <div class="target-info">
+            <h1 id="targetName">Memuat Target...</h1>
+            <p>Peran Evaluasi: <span id="evaluationRole" style="color: var(--accent-teal); font-weight: 500;">-</span></p>
+        </div>
+        <div class="progress-wrapper">
+            <div class="progress-text">Progress: <span id="progressCount">0</span> / <span id="totalQuestions">0</span></div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <form id="kuesionerForm">
+        <div id="kuesionerContainer">
+            </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-submit" style="background: transparent; color: var(--color-text-main); border: 1px solid var(--border-color);" onclick="window.history.back()">Batal</button>
+            <button type="submit" class="btn-submit" id="btnSubmitForm" disabled>Kirim Hasil Penilaian</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const taskId = document.getElementById('taskId').value;
+    let totalQuestionsRequired = 0;
+    let answeredQuestions = new Set();
+
+    // Kamus ikon untuk setiap nilai inti
+    const akhlakIcons = {
+        'Amanah': 'fa-handshake',
+        'Kompeten': 'fa-graduation-cap',
+        'Harmonis': 'fa-people-group',
+        'Loyal': 'fa-shield-heart',
+        'Adaptif': 'fa-bolt',
+        'Kolaboratif': 'fa-users-gear'
+    };
+
+    const fetchKuesionerData = async () => {
+        try {
+            // Mengambil struktur soal beserta detail target evaluasi
+            const response = await fetch(`/api/kuesioner/tugas/${taskId}`);
+            if (!response.ok) throw new Error('Gagal memuat kuesioner.');
+            
+            const data = await response.json();
+            
+            document.getElementById('targetName').textContent = `Evaluasi: ${data.target_nama}`;
+            document.getElementById('evaluationRole').textContent = data.peran_evaluasi;
+            
+            buildKuesionerDOM(data.kategori_akhlak);
+            
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.getElementById('kuesionerWrapper').style.display = 'block';
+            
+        } catch (error) {
+            alert('Terjadi kesalahan sistem. Silakan muat ulang halaman.');
+        }
+    };
+
+    const buildKuesionerDOM = (kategoriList) => {
+        const container = document.getElementById('kuesionerContainer');
+        let htmlContent = '';
+
+        kategoriList.forEach(kategori => {
+            const iconClass = akhlakIcons[kategori.nama] || 'fa-star';
+            
+            htmlContent += `
+                <div class="value-section">
+                    <div class="value-header">
+                        <div class="value-icon"><i class="fa-solid ${iconClass}"></i></div>
+                        <div class="value-title">
+                            <h2>${kategori.nama}</h2>
+                            <p>${kategori.deskripsi}</p>
+                        </div>
+                    </div>
+                    <ul class="question-list">
+            `;
+
+            kategori.pertanyaan.forEach(q => {
+                totalQuestionsRequired++;
+                htmlContent += `
+                    <li class="question-item">
+                        <div class="question-text">${q.id}. ${q.teks}</div>
+                        <div class="likert-scale">
+                            ${[1, 2, 3, 4, 5].map(score => `
+                                <label class="likert-option">
+                                    <input type="radio" name="q_${q.id}" value="${score}" onchange="updateProgress('${q.id}')" required>
+                                    <div class="likert-label">
+                                        <span class="score">${score}</span>
+                                        <span class="desc">${getLikertDesc(score)}</span>
+                                    </div>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </li>
+                `;
+            });
+
+            htmlContent += `</ul></div>`;
+        });
+
+        container.innerHTML = htmlContent;
+        document.getElementById('totalQuestions').textContent = totalQuestionsRequired;
+    };
+
+    const getLikertDesc = (score) => {
+        const descs = {
+            1: 'Sangat Kurang',
+            2: 'Kurang',
+            3: 'Cukup',
+            4: 'Baik',
+            5: 'Sangat Baik'
+        };
+        return descs[score];
+    };
+
+    const updateProgress = (questionId) => {
+        answeredQuestions.add(questionId);
+        const currentAnswered = answeredQuestions.size;
+        
+        document.getElementById('progressCount').textContent = currentAnswered;
+        
+        const percentage = (currentAnswered / totalQuestionsRequired) * 100;
+        document.getElementById('progressBar').style.width = `${percentage}%`;
+
+        // Validasi tombol kirim terbuka jika semua pertanyaan dijawab
+        const submitBtn = document.getElementById('btnSubmitForm');
+        if (currentAnswered === totalQuestionsRequired) {
+            submitBtn.disabled = false;
+        }
+    };
+
+    document.getElementById('kuesionerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (answeredQuestions.size < totalQuestionsRequired) {
+            alert('Mohon lengkapi seluruh indikator penilaian sebelum mengirim.');
+            return;
+        }
+
+        const btnSubmit = document.getElementById('btnSubmitForm');
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Memproses Kalkulasi...';
+
+        // Mengumpulkan respons menggunakan FormData
+        const formData = new FormData(e.target);
+        const jawabanData = [];
+        
+        for (let [key, value] of formData.entries()) {
+            if (key.startsWith('q_')) {
+                jawabanData.push({
+                    pertanyaan_id: key.replace('q_', ''),
+                    skor: parseInt(value)
+                });
+            }
+        }
+
+        const payload = {
+            tugas_id: taskId,
+            jawaban: jawabanData
+        };
+
+        try {
+            const response = await fetch('/api/kuesioner/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                alert('Evaluasi berhasil direkam. Terima kasih atas objektivitas Anda.');
+                window.location.href = '/dashboard';
+            } else {
+                const result = await response.json();
+                alert(result.message || 'Gagal menyimpan evaluasi.');
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = 'Kirim Hasil Penilaian';
+            }
+        } catch (error) {
+            alert('Terjadi kesalahan jaringan.');
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = 'Kirim Hasil Penilaian';
+        }
+    });
+
+    // Inisialisasi proses
+    document.addEventListener('DOMContentLoaded', fetchKuesionerData);
+</script>
+{% endblock %}

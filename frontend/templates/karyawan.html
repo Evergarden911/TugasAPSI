@@ -1,0 +1,384 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Manajemen Data Karyawan - Sistem 360°{% endblock %}
+
+{% block head %}
+<style>
+    /* Desain Tabel Data */
+    .data-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--accent-lime) 0%, var(--accent-teal) 100%);
+        color: #050505;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover { opacity: 0.9; }
+
+    .table-container {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    th {
+        background-color: rgba(255, 255, 255, 0.02);
+        padding: 16px;
+        font-size: 13px;
+        color: var(--color-text-muted);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+        padding: 16px;
+        font-size: 14px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    /* Tombol Aksi Baris */
+    .action-group {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-icon {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--color-text-main);
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .btn-icon.edit:hover { background-color: rgba(222, 255, 154, 0.1); color: var(--accent-lime); border-color: var(--accent-lime); }
+    .btn-icon.delete:hover { background-color: rgba(244, 63, 94, 0.1); color: #f43f5e; border-color: #f43f5e; }
+
+    /* Komponen Modal Interaktif */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-content {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        width: 100%;
+        max-width: 500px;
+        transform: translateY(-20px);
+        transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content {
+        transform: translateY(0);
+    }
+
+    .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h2 { font-size: 18px; font-weight: 600; }
+
+    .btn-close {
+        background: transparent;
+        border: none;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+    .modal-body { padding: 24px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--color-text-muted); }
+    .form-control {
+        width: 100%;
+        background-color: var(--bg-main);
+        border: 1px solid var(--border-color);
+        color: var(--color-text-main);
+        padding: 10px 12px;
+        border-radius: 6px;
+        font-family: inherit;
+    }
+    .form-control:focus { outline: none; border-color: var(--accent-lime); }
+
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--color-text-main);
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    /* Penanda Status Memuat */
+    #loadingIndicator { text-align: center; padding: 40px; color: var(--color-text-muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="data-header">
+    <div>
+        <h1 style="font-size: 24px; font-weight: 700;">Data Master Karyawan</h1>
+        <p style="color: var(--color-text-muted); font-size: 14px; margin-top: 4px;">Kelola entitas pengguna untuk kebutuhan pemetaan evaluasi.</p>
+    </div>
+    <button class="btn-primary" onclick="openModal('add')">
+        <i class="fa-solid fa-plus"></i> Tambah Karyawan
+    </button>
+</div>
+
+<div class="table-container">
+    <table id="employeeTable">
+        <thead>
+            <tr>
+                <th>NIP</th>
+                <th>Nama Lengkap</th>
+                <th>Divisi</th>
+                <th>Jabatan</th>
+                <th>Hak Akses</th>
+                <th style="width: 100px; text-align: center;">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="employeeTableBody">
+            </tbody>
+    </table>
+    <div id="loadingIndicator">Memuat data dari peladen...</div>
+</div>
+
+<div class="modal-overlay" id="employeeModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Tambah Karyawan Baru</h2>
+            <button class="btn-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="employeeForm">
+            <div class="modal-body">
+                <input type="hidden" id="formMode" value="add">
+                
+                <div class="form-group">
+                    <label for="nip">Nomor Induk Pegawai (NIP)</label>
+                    <input type="text" id="nip" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="nama">Nama Lengkap</label>
+                    <input type="text" id="nama" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="divisi">Divisi</label>
+                    <input type="text" id="divisi" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="jabatan">Jabatan</label>
+                    <input type="text" id="jabatan" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="role">Tingkat Hak Akses</label>
+                    <select id="role" class="form-control" required>
+                        <option value="karyawan">Staf / Karyawan Biasa</option>
+                        <option value="manajer">Pimpinan / Manajer</option>
+                        <option value="hrd">Administrator HRD</option>
+                    </select>
+                </div>
+                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Batal</button>
+                <button type="submit" class="btn-primary" id="btnSave">Simpan Data</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // State Management Sisi Klien
+    let employeesData = [];
+    const modal = document.getElementById('employeeModal');
+    const form = document.getElementById('employeeForm');
+
+    // 1. Fungsi Inisialisasi: Mengambil data dari Backend Flask
+    const fetchEmployees = async () => {
+        document.getElementById('loadingIndicator').style.display = 'block';
+        document.getElementById('employeeTableBody').innerHTML = '';
+        
+        try {
+            // Endpoint API harus diamankan dengan otorisasi di sisi Flask
+            const response = await fetch('/api/karyawan');
+            if (!response.ok) throw new Error('Gagal menarik data');
+            
+            employeesData = await response.json();
+            renderTable();
+        } catch (error) {
+            alert('Kesalahan jaringan: ' + error.message);
+        } finally {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+    };
+
+    // 2. Fungsi Presentasi: Merender tabel tanpa memuat ulang halaman
+    const renderTable = () => {
+        const tbody = document.getElementById('employeeTableBody');
+        tbody.innerHTML = employeesData.map(emp => `
+            <tr>
+                <td style="font-family: monospace;">${emp.nip}</td>
+                <td style="font-weight: 500;">${emp.nama}</td>
+                <td>${emp.divisi}</td>
+                <td>${emp.jabatan}</td>
+                <td><span style="text-transform: capitalize; color: var(--accent-lime);">${emp.role}</span></td>
+                <td>
+                    <div class="action-group">
+                        <button class="btn-icon edit" onclick="openModal('edit', '${emp.nip}')" title="Ubah Data">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button class="btn-icon delete" onclick="deleteEmployee('${emp.nip}')" title="Hapus Data">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    };
+
+    // 3. Logika Antarmuka Modal
+    const openModal = (mode, nip = null) => {
+        document.getElementById('formMode').value = mode;
+        form.reset();
+
+        if (mode === 'edit') {
+            document.getElementById('modalTitle').textContent = 'Ubah Data Karyawan';
+            const emp = employeesData.find(e => e.nip === nip);
+            if (emp) {
+                document.getElementById('nip').value = emp.nip;
+                document.getElementById('nip').readOnly = true; // NIP tidak boleh diubah
+                document.getElementById('nama').value = emp.nama;
+                document.getElementById('divisi').value = emp.divisi;
+                document.getElementById('jabatan').value = emp.jabatan;
+                document.getElementById('role').value = emp.role;
+            }
+        } else {
+            document.getElementById('modalTitle').textContent = 'Tambah Karyawan Baru';
+            document.getElementById('nip').readOnly = false;
+        }
+
+        modal.classList.add('active');
+    };
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+    };
+
+    // 4. Logika Transaksi Data: Mengirim form ke Backend
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btnSave = document.getElementById('btnSave');
+        btnSave.disabled = true;
+        btnSave.textContent = 'Menyimpan...';
+
+        const mode = document.getElementById('formMode').value;
+        const payload = {
+            nip: document.getElementById('nip').value,
+            nama: document.getElementById('nama').value,
+            divisi: document.getElementById('divisi').value,
+            jabatan: document.getElementById('jabatan').value,
+            role: document.getElementById('role').value
+        };
+
+        try {
+            const endpoint = mode === 'add' ? '/api/karyawan' : `/api/karyawan/${payload.nip}`;
+            const method = mode === 'add' ? 'POST' : 'PUT';
+
+            const response = await fetch(endpoint, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            
+            if (response.ok) {
+                closeModal();
+                fetchEmployees(); // Muat ulang tabel untuk memastikan sinkronisasi data
+            } else {
+                alert(result.message || 'Gagal menyimpan data.');
+            }
+        } catch (error) {
+            alert('Kesalahan jaringan. Gagal menghubungi peladen.');
+        } finally {
+            btnSave.disabled = false;
+            btnSave.textContent = 'Simpan Data';
+        }
+    });
+
+    // 5. Logika Destruktif: Menghapus Data
+    const deleteEmployee = async (nip) => {
+        if (!confirm(`Tindakan ini permanen. Hapus data karyawan dengan NIP ${nip}?`)) return;
+
+        try {
+            const response = await fetch(`/api/karyawan/${nip}`, { method: 'DELETE' });
+            if (response.ok) {
+                fetchEmployees();
+            } else {
+                const result = await response.json();
+                alert(result.message || 'Gagal menghapus data. Pastikan karyawan tidak terikat relasi pemetaan aktif.');
+            }
+        } catch (error) {
+            alert('Kesalahan jaringan.');
+        }
+    };
+
+    // Eksekusi tarikan data awal saat kerangka DOM siap
+    document.addEventListener('DOMContentLoaded', fetchEmployees);
+</script>
+{% endblock %}

@@ -1,0 +1,306 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Dasbor Utama - Sistem Penilaian 360°{% endblock %}
+
+{% block head %}
+<style>
+    /* Grid Metrik Utama */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .metric-card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 24px;
+    }
+
+    .metric-card h3 {
+        font-size: 14px;
+        color: var(--color-text-muted);
+        font-weight: 500;
+        margin-bottom: 12px;
+    }
+
+    .metric-value {
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    /* Struktur Layout Dua Kolom */
+    .dashboard-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+        .dashboard-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .panel-box {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 28px;
+        margin-bottom: 24px;
+    }
+
+    .panel-box h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    /* Komponen Progres Bar */
+    .progress-container {
+        margin-bottom: 16px;
+    }
+
+    .progress-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+
+    .progress-bar-bg {
+        background-color: var(--bg-main);
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        background: linear-gradient(90deg, var(--accent-lime), var(--accent-teal));
+        height: 100%;
+        width: 0%; /* Diperbarui via JS */
+        transition: width 0.5s ease-in-out;
+    }
+
+    /* Gaya Tabel / Daftar Tugas */
+    .data-list {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-list th {
+        text-align: left;
+        padding: 12px;
+        color: var(--color-text-muted);
+        font-size: 13px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .data-list td {
+        padding: 16px 12px;
+        font-size: 14px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .status-pending { background-color: rgba(234, 179, 8, 0.1); color: #eab308; }
+    .status-success { background-color: rgba(34, 197, 94, 0.1); color: #22c55e; }
+
+    .btn-action {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: var(--color-text-main);
+        padding: 6px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+        background-color: var(--accent-lime);
+        color: #000;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 32px;">
+    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Selamat Datang Kembali, Pasca-Login</h1>
+    <p style="color: var(--color-text-muted); font-size: 14px;">Berikut ringkasan aktivitas evaluasi kompetensi AKHLAK Anda.</p>
+</div>
+
+{# ==================== RENDER HALAMAN ATASAN / HRD / MANAJER ==================== #}
+{% if session.get('role') in ['hrd', 'manajer'] %}
+<div class="metrics-grid">
+    <div class="metric-card">
+        <h3>Total Karyawan Terdaftar</h3>
+        <div class="metric-value" id="totalKaryawan">-</div>
+    </div>
+    <div class="metric-card">
+        <h3>Kuesioner Terdistribusi</h3>
+        <div class="metric-value" id="totalKuesioner">-</div>
+    </div>
+    <div class="metric-card">
+        <h3>Rata-rata Penyelesaian</h3>
+        <div class="metric-value" style="color: var(--accent-lime);" id="avgProgress">-</div>
+    </div>
+</div>
+
+<div class="dashboard-layout">
+    <div class="panel-box">
+        <h2>Daftar Penilaian Anggota Tim (Bawahan Langsung)</h2>
+        <table class="data-list">
+            <thead>
+                <tr>
+                    <th>NIP</th>
+                    <th>Nama Pegawai</th>
+                    <th>Divisi</th>
+                    <th>Status Evaluasi 360°</th>
+                    <th>Aksi</th>
+                </tr>
+            </table>
+            <tbody id="subordinateTableBody">
+                </tbody>
+        </table>
+    </div>
+
+    <div>
+        <div class="panel-box">
+            <h2>Pemantauan Progress Divisi</h2>
+            <div id="divisionProgressContainer">
+                </div>
+        </div>
+    </div>
+</div>
+
+{# ==================== RENDER HALAMAN KARYAWAN BIASA ==================== #}
+{% else %}
+<div class="metrics-grid">
+    <div class="metric-card">
+        <h3>Tugas Evaluasi Menunggu</h3>
+        <div class="metric-value" style="color: var(--accent-lime);" id="pendingTasks">-</div>
+    </div>
+    <div class="metric-card">
+        <h3>Evaluasi Selesai Dikirim</h3>
+        <div class="metric-value" id="completedTasks">-</div>
+    </div>
+</div>
+
+<div class="dashboard-layout">
+    <div class="panel-box" style="grid-column: span 2;">
+        <h2>Daftar Kuesioner Nilai AKHLAK yang Harus Anda Isi</h2>
+        <table class="data-list">
+            <thead>
+                <tr>
+                    <th>Target Evaluasi</th>
+                    <th>Hubungan Kerja</th>
+                    <th>Batas Waktu</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="employeeTaskTableBody">
+                </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Deteksi peran pengguna langsung dari elemen sesi untuk menentukan pemanggilan API
+        const userRole = "{{ session.get('role', 'karyawan') }}";
+
+        const loadDashboardData = async () => {
+            try {
+                // Fetch data dari endpoint server tunggal atau spesifik rute
+                const response = await fetch('/api/dashboard/summary');
+                if (!response.ok) throw new Error('Gagal memuat ringkasan data.');
+                
+                const data = await response.json();
+
+                if (userRole === 'hrd' || userRole === 'manajer') {
+                    // Update elemen DOM versi Atasan
+                    document.getElementById('totalKaryawan').textContent = data.total_karyawan || 0;
+                    document.getElementById('totalKuesioner').textContent = data.total_kuesioner || 0;
+                    document.getElementById('avgProgress').textContent = (data.avg_progress || 0) + '%';
+                    
+                    renderSubordinates(data.subordinates || []);
+                    renderDivisionProgress(data.divisions || []);
+                } else {
+                    // Update elemen DOM versi Karyawan
+                    document.getElementById('pendingTasks').textContent = data.pending_count || 0;
+                    document.getElementById('completedTasks').textContent = data.completed_count || 0;
+                    
+                    renderEmployeeTasks(data.tasks || []);
+                }
+            } catch (error) {
+                console.error('Kesalahan inisialisasi dasbor:', error);
+            }
+        };
+
+        const renderSubordinates = (list) => {
+            const tbody = document.getElementById('subordinateTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = list.length ? list.map(sub => `
+                <tr>
+                    <td>${sub.nip}</td>
+                    <td><strong>${sub.nama}</strong></td>
+                    <td>${sub.divisi}</td>
+                    <td><span class="status-badge ${sub.complete ? 'status-success' : 'status-pending'}">${sub.complete ? 'Selesai' : 'Proses'}</span></td>
+                    <td><a href="/karyawan/detail/${sub.nip}" class="btn-action">Lihat Rapor</a></td>
+                </tr>
+            `).join('') : '<tr><td colspan="5" style="text-align:center;">Tidak ada anggota tim yang terdaftar.</td></tr>';
+        };
+
+        const renderDivisionProgress = (divs) => {
+            const container = document.getElementById('divisionProgressContainer');
+            if(!container) return;
+            container.innerHTML = divs.map(d => `
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>Divisi ${d.name}</span>
+                        <strong>${d.percentage}%</strong>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: ${d.percentage}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        const renderEmployeeTasks = (tasks) => {
+            const tbody = document.getElementById('employeeTaskTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = tasks.length ? tasks.map(task => `
+                <tr>
+                    <td><strong>${task.target_nama}</strong></td>
+                    <td><span style="color:var(--accent-teal); font-weight:500;">${task.hubungan}</span></td>
+                    <td>${task.deadline}</td>
+                    <td><span class="status-badge ${task.status === 'Selesai' ? 'status-success' : 'status-pending'}">${task.status}</span></td>
+                    <td>
+                        ${task.status === 'Selesai' 
+                            ? `<span style="color:var(--color-text-muted); font-size:13px;">Sudah Dikirim</span>` 
+                            : `<a href="/kuesioner/isi/${task.id}" class="btn-action">Mulai Isi</a>`}
+                    </td>
+                </tr>
+            `).join('') : '<tr><td colspan="5" style="text-align:center;">Semua kuesioner telah diselesaikan. Terima kasih.</td></tr>';
+        };
+
+        loadDashboardData();
+    });
+</script>
+{% endblock %}
