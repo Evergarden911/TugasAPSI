@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session
 from flask_login import login_user, logout_user, login_required, current_user
 from functools import wraps
 from app.models.user import User
@@ -37,6 +37,8 @@ def login():
         # Validasi kredensial (Eksekusi fungsi kriptografi dari model)
         if user and user.check_password(password):
             login_user(user, remember=data.get('remember_me', False))
+            session['nama'] = user.data_karyawan.nama
+            session['role'] = user.role
             # Rute tujuan MPA setelah sukses
             return jsonify({"success": True, "redirect_url": "/dashboard"}), 200
         
@@ -48,5 +50,7 @@ def login():
 @auth_bp.route('/logout', methods=['POST'])
 @login_required
 def logout():
+    session.pop('nama', None)
+    session.pop('role', None)
     logout_user()
     return jsonify({"success": True}), 200
