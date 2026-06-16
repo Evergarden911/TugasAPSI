@@ -372,6 +372,15 @@ def api_kuesioner_submit():
     if not pemetaan:
         return jsonify({"success": False, "message": "Tugas evaluasi tidak ditemukan."}), 404
         
+    # --- LAPISAN KEAMANAN IDOR ---
+    # Memastikan pengguna yang meminta eksekusi adalah pemilik sah dari mandat evaluasi ini
+    if pemetaan.evaluator_nip != current_user.nip:
+        return jsonify({
+            "success": False, 
+            "message": "Pelanggaran Otorisasi: Anda tidak memiliki hak untuk mengeksekusi tugas evaluasi ini."
+        }), 403
+    # ----------------------------------------
+        
     try:
         for j in jawaban:
             q_id = j.get('pertanyaan_id')
