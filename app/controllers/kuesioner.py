@@ -5,6 +5,7 @@ from app.controllers.auth import role_required
 from app.extensions import db
 from app.models.user import Karyawan
 from app.models.kuesioner import Periode, Pemetaan, TemplateKuesioner, DetailEvaluasi
+from app.services.kalkulasi import hitung_skor_360
 
 kuesioner_bp = Blueprint('kuesioner', __name__)
 
@@ -393,4 +394,42 @@ def api_kuesioner_submit():
         return jsonify({"success": True}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "message": str(e)}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
+    
+@kuesioner_bp.route('/api/hasil/<nip>', methods=['GET'])
+@login_required
+@role_required('hrd', 'manajer')
+def api_hasil_evaluasi(nip):
+    """
+    Menghitung dan mengembalikan skor akhir 360 derajat karyawan.
+    Hanya dapat diakses oleh manajer dan departemen SDM.
+    """
+    # Validasi integritas data target terlebih dahulu
+    target = Karyawan.query.filter_by(nip=nip).first()
+    if not target:
+        return jsonify({
+            "success": False, 
+            "message": "Operasi dibatalkan. Karyawan target tidak ditemukan di dalam sistem."
+        }), 404
+
+    # Ambil konteks periode yang sedang berjalan
+    periode = get_active_periode()
+    
+    try:
+        # Pendelegasian komputasi ke lapisan service
+        skor_akhir = hitung_skor_360(nip, periode.id)
+        
+        return jsonify({
+            "success": True,
+            "target_nip": nip,
+            "target_nama": target.nama,
+            "periode_id": periode.id,
+            "skor_akhir": skor_akhir
+        }), 200
+        
+    except Exception as e:
+        # Penanganan galat internal untuk mencegah server berhenti (Reliability)
+        return jsonify({
+            "success": False,
+            "message": f"Kegagalan mesin kalkulasi internal: {str(e)}"
+        }), 500

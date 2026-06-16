@@ -13,9 +13,10 @@ def role_required(*roles):
     def wrapper(fn):
         @wraps(fn)
         def decorated_view(*args, **kwargs):
-            if current_user.role not in roles:
+            # Guard clause: Validasi status autentikasi SEBELUM mengevaluasi peran
+            if not current_user.is_authenticated or current_user.role not in roles:
                 if request.headers.get('Accept') == 'application/json':
-                    return jsonify({"success": False, "message": "Akses ditolak. Hak otorisasi tidak mencukupi."}), 403
+                    return jsonify({"success": False, "message": "Akses ditolak. Sesi kedaluwarsa atau hak otorisasi tidak mencukupi."}), 403
                 return redirect(url_for('auth.login'))
             return fn(*args, **kwargs)
         return decorated_view
