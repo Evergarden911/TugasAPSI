@@ -4,17 +4,21 @@ from werkzeug.security import generate_password_hash
 
 def get_semua_karyawan():
     """Mengambil daftar seluruh entitas karyawan berserta hak aksesnya."""
-    # Menggunakan SQLAlchemy JOIN untuk menggabungkan data profil dan akun
-    query = db.session.query(Karyawan, User).join(User, Karyawan.nip == User.nip).all()
+    # Menggunakan outerjoin untuk memastikan entitas Karyawan tetap ditarik 
+    # terlepas dari apakah mereka memiliki baris kredensial User atau tidak.
+    query = db.session.query(Karyawan, User).outerjoin(User, Karyawan.nip == User.nip).all()
     
     hasil = []
     for karyawan, user in query:
+        # Menangani skenario Null Pointer/NoneType jika objek user tidak ada
+        role_pengguna = user.role if user else 'Tidak Memiliki Akun'
+        
         hasil.append({
             'nip': karyawan.nip,
             'nama': karyawan.nama,
             'divisi': karyawan.divisi,
             'jabatan': karyawan.jabatan,
-            'role': user.role
+            'role': role_pengguna
         })
     return hasil
 
