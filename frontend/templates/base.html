@@ -21,6 +21,13 @@
             <li class="sidebar-item active">
                 <a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Dasbor</a>
             </li>
+            
+            {% if session.get('role') == 'admin' %}
+            <li class="sidebar-item">
+                <a href="/admin"><i class="fa-solid fa-server"></i> Panel Admin</a>
+            </li>
+            {% endif %}
+
             {% if session.get('role') in ['hrd', 'manajer'] %}
             <li class="sidebar-item">
                 <a href="/karyawan"><i class="fa-solid fa-users"></i> Data Karyawan</a>
@@ -29,6 +36,7 @@
                 <a href="/pemetaan"><i class="fa-solid fa-diagram-project"></i> Pemetaan Relasi</a>
             </li>
             {% endif %}
+            
             <li class="sidebar-item">
                 <a href="/kuesioner"><i class="fa-solid fa-list-check"></i> Kuesioner</a>
             </li>
@@ -42,7 +50,7 @@
                     <span class="user-name">{{ session.get('nama', 'Pengguna') }}</span>
                     <span class="user-role">{{ session.get('role', 'karyawan') | upper }}</span>
                 </div>
-                <button class="btn-logout" id="logoutBtn">
+                <button class="btn-logout" id="logoutBtn" title="Keluar dari Sistem">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
                 </button>
             </div>
@@ -57,12 +65,29 @@
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             if (confirm('Apakah Anda yakin ingin keluar dari sistem?')) {
                 try {
-                    const response = await fetch('/auth/logout', { method: 'POST' });
+                    // Menonaktifkan tombol untuk mencegah race-condition klik ganda
+                    const btn = document.getElementById('logoutBtn');
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+
+                    const response = await fetch('/auth/logout', { 
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
                     if (response.ok) {
-                        window.location.href = '/login';
+                        // Memperbaiki jalur re-route ke halaman yang valid
+                        window.location.replace('/auth/login');
+                    } else {
+                        console.error('Peladen menolak permintaan keluar sesi.');
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
                     }
                 } catch (error) {
-                    console.error('Gagal melakukan operasi logout:', error);
+                    console.error('Kegagalan jaringan saat menghubungi peladen:', error);
+                    alert('Gagal terhubung ke peladen. Periksa koneksi internet Anda.');
                 }
             }
         });

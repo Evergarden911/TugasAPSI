@@ -1,0 +1,87 @@
+unknwon
+{% extends "base.html" %}
+
+{% block title %}Panel Administrasi - Sistem 360°{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h2>Panel Pemeliharaan Infrastruktur</h2>
+    <p>Gunakan panel ini untuk mengelola injeksi data dan pemeliharaan evaluasi.</p>
+
+    <div class="card import-card" style="margin-top: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+        <h3>Impor Data Karyawan Massal</h3>
+        <p>Unggah berkas berformat CSV untuk mendaftarkan entitas karyawan dan akun pengguna sekaligus.</p>
+        
+        <form id="importForm" enctype="multipart/form-data" style="margin-top: 15px;">
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="csvFile" style="display: block; margin-bottom: 5px; font-weight: 500;">Pilih Berkas CSV</label>
+                <input type="file" id="csvFile" name="file" accept=".csv" required style="padding: 8px; width: 100%; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            <button type="submit" class="btn btn-primary" id="btnSubmit" style="padding: 10px 15px; background-color: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Proses Impor Data
+            </button>
+        </form>
+        
+        <div id="importStatus" style="display: none; margin-top: 15px; padding: 10px; border-radius: 4px; font-weight: 500;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('importForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('csvFile');
+        const statusDiv = document.getElementById('importStatus');
+        const btnSubmit = document.getElementById('btnSubmit');
+        
+        if (fileInput.files.length === 0) {
+            tampilkanPesan(statusDiv, 'Sistem menolak operasi: Berkas CSV belum dipilih.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menjalankan Injeksi...';
+        statusDiv.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/admin/import-karyawan', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                tampilkanPesan(statusDiv, `Injeksi berhasil diselesaikan. Total ${result.rows_inserted} baris data masuk ke basis data.`, 'success');
+                fileInput.value = ''; 
+            } else {
+                tampilkanPesan(statusDiv, result.message || 'Sistem gagal memvalidasi atau memproses berkas.', 'error');
+            }
+        } catch (error) {
+            tampilkanPesan(statusDiv, 'Gangguan koneksi: Peladen tidak memberikan respons yang valid.', 'error');
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Proses Impor Data';
+        }
+    });
+
+    function tampilkanPesan(elemen, pesan, tipe) {
+        elemen.style.display = 'block';
+        elemen.textContent = pesan;
+        if (tipe === 'error') {
+            elemen.style.backgroundColor = '#f8d7da';
+            elemen.style.color = '#842029';
+            elemen.style.border = '1px solid #f5c2c7';
+        } else {
+            elemen.style.backgroundColor = '#d1e7dd';
+            elemen.style.color = '#0f5132';
+            elemen.style.border = '1px solid #badbcc';
+        }
+    }
+</script>
+{% endblock %}
