@@ -74,7 +74,6 @@ def jalankan_seeder():
             else:
                 print(f"Abaikan: Entitas {data['nip']} sudah beroperasi di pangkalan data.")
         
-        # Eksekusi komit massal
         if entitas_baru > 0:
             try:
                 db.session.commit()

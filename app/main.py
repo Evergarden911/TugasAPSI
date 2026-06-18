@@ -27,19 +27,14 @@ def create_app(config_class=Config):
     app.register_blueprint(admin_bp)
     app.register_blueprint(kuesioner_bp)
 
-    # --- TAMBAHKAN BLOK INI ---
-    # Menangani rute akar untuk mencegah galat 404
     @app.route('/')
     def index():
-        # Mengalihkan pengunjung secara otomatis ke halaman masuk sesi
-        # Pastikan fungsi untuk me-render login.html di auth.py bernama 'login'
         return redirect(url_for('auth.login')) 
-    # --------------------------
+
 
     return app
 
 app = create_app()
 
 if __name__ == '__main__':
-    # Parameter debug=True mempermudah pelacakan galat, host='0.0.0.0' membuka akses jaringan lokal
     app.run(debug=True, host='0.0.0.0', port=5000)
